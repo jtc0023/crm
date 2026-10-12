@@ -189,14 +189,12 @@ Written up where the work happens, not in a style guide:
 
 ## Quick start
 
-You need [Bun](https://bun.com) and Docker.
+You need [Bun](https://bun.com) and a Neon Postgres connection string.
 
 ```sh
 git clone https://github.com/trycompai/crm.git && cd crm
 cp .env.example .env          # then fill in the values below
 bun install
-
-docker compose up -d          # Postgres on :5432
 
 bun run db:deploy             # apply migrations
 bun run db:seed               # optional: a believable pipeline to look at
@@ -217,6 +215,8 @@ Open `.env` and set these. Everything else in the file is optional and commented
 
 | Variable                                   | What to put in it                                                    |
 | ------------------------------------------ | -------------------------------------------------------------------- |
+| `DATABASE_URL`                             | The pooled Neon Postgres connection string for app traffic.          |
+| `DATABASE_URL_UNPOOLED`                    | The direct Neon Postgres connection string for Prisma commands.      |
 | `BETTER_AUTH_SECRET`                       | `openssl rand -base64 32`                                             |
 | `ALLOWED_SIGN_IN`                          | Your email domain, e.g. `acme.com`. Or one address, e.g. `you@gmail.com`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`| A Google OAuth client — 2 minutes, below. Both or neither.             |
@@ -226,8 +226,8 @@ Open `.env` and set these. Everything else in the file is optional and commented
 **Settings → SSO** once you are in. Setting both is fine and common: the sign-in page
 offers both buttons, and each rep's mail is read from whichever they signed in with.
 
-`DATABASE_URL` already matches the `docker compose` Postgres, so leave it alone unless
-you brought your own.
+Use the Neon pooler URL for `DATABASE_URL`. Use the direct Neon URL for
+`DATABASE_URL_UNPOOLED`, so Prisma migrations avoid PgBouncer.
 
 <details>
 <summary><strong>Getting the Google OAuth client</strong></summary>
@@ -320,7 +320,7 @@ short version:
 
 | Command | |
 | --- | --- |
-| `bun run dev` | Prepare the local database, then run everything in dependency-aware watch mode |
+| `bun run dev` | Prepare the Neon database, then run everything in dependency-aware watch mode |
 | `bun run build` | Build all apps and packages |
 | `bun run test` | Run the test suite |
 | `bun run check-types` | `tsc --noEmit` everywhere |

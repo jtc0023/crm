@@ -15,7 +15,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@crm/ui/components/dropdown-menu";
-import Logo from "@crm/ui/components/logo";
 import { Separator } from "@crm/ui/components/separator";
 import { Skeleton } from "@crm/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +29,9 @@ import { useWorkspaceUrl } from "@/lib/use-workspace-url";
 import { workspaceLabel } from "@/lib/workspace-label";
 
 type User = { name: string; email: string; image: string | null };
+
+const CONNECT_TECH_GLOBAL_LOGO =
+	"/brand/connect-tech-global-logo-light-mode.svg";
 
 export function AppHeader({ user }: { user: User }) {
 	const { setOpen: setMobileNavOpen } = useMobileNav();
@@ -55,7 +57,11 @@ export function AppHeader({ user }: { user: User }) {
 					aria-label="Homepage"
 					className="hidden size-8 items-center justify-center text-foreground md:flex"
 				>
-					<Logo className="size-5" />
+					<img
+						alt=""
+						className="size-5"
+						src={CONNECT_TECH_GLOBAL_LOGO}
+					/>
 				</Link>
 				<Separator orientation="vertical" className="mx-1 h-5 bg-transparent" />
 				<span className="min-w-0 truncate font-medium text-sm">{label}</span>
@@ -84,7 +90,11 @@ export function AppHeaderFallback() {
 		>
 			<div className="flex shrink-0 items-center gap-1">
 				<span className="hidden size-8 items-center justify-center text-foreground md:flex">
-					<Logo className="size-5" />
+					<img
+						alt=""
+						className="size-5"
+						src={CONNECT_TECH_GLOBAL_LOGO}
+					/>
 				</span>
 				<Separator orientation="vertical" className="mx-1 h-5 bg-transparent" />
 				<Skeleton className="h-4 w-24" />

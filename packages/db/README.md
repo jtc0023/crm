@@ -20,8 +20,7 @@ import { Prisma, type User } from "@crm/db";
 ## Setup
 
 ```bash
-docker compose up -d       # Postgres matching the DATABASE_URL in .env.example
-cp .env.example .env       # at the repo root
+cp .env.example .env       # at the repo root, with Neon DATABASE_URL
 bun run db:generate        # generate Prisma Client
 bun run db:deploy          # apply the migrations
 ```
@@ -36,7 +35,7 @@ CLI works without any app running.
 | Script        | Purpose                                                  |
 | ------------- | -------------------------------------------------------- |
 | `build`       | `prisma generate` — cached by Turborepo, runs via `^build` |
-| `dev:prepare` | Apply pending local migrations, reject drift, and generate Prisma Client |
+| `dev:prepare` | Apply pending Neon migrations, reject drift, and generate Prisma Client |
 | `db:generate` | Regenerate Prisma Client                                 |
 | `db:migrate`  | Create and apply a migration (development)               |
 | `db:deploy`   | Apply pending migrations (CI / production)               |
@@ -47,6 +46,9 @@ CLI works without any app running.
 
 Each is also exposed at the repo root (`bun run db:migrate`) and routed through
 `turbo run`.
+
+For Prisma CLI commands, `DATABASE_URL_UNPOOLED` wins when it exists. Use the direct
+Neon connection there, and keep pooled `DATABASE_URL` for application traffic.
 
 The root `bun run dev` command runs `dev:prepare` before any service starts and
 reruns it when the schema or migrations change. Services that hold a Prisma

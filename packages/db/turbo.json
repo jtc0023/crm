@@ -5,7 +5,7 @@
 		"build": {
 			"inputs": ["$TURBO_DEFAULT$", "prisma/**"],
 			"outputs": ["src/generated/**"],
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"dev:prepare": {
 			"cache": false,
@@ -13,48 +13,51 @@
 				"prisma/schema.prisma",
 				"prisma/migrations/**",
 				"prisma.config.ts",
-				"scripts/prepare-dev.ts",
-				"scripts/require-local-db.ts"
+				"scripts/prepare-dev.ts"
 			],
 			"outputs": ["src/generated/**"],
-			"passThroughEnv": ["ALLOW_REMOTE_DB", "DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:generate": {
 			"inputs": ["$TURBO_DEFAULT$", "prisma/**"],
 			"outputs": ["src/generated/**"],
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:deploy": {
 			"cache": false,
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:migrate": {
 			"cache": false,
 			"interactive": true,
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:push": {
 			"cache": false,
 			"interactive": true,
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:reset": {
 			"cache": false,
 			"interactive": true,
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"db:seed": {
 			"cache": false,
-			"passThroughEnv": ["BLOB_READ_WRITE_TOKEN", "DATABASE_URL"]
+			"passThroughEnv": [
+				"BLOB_READ_WRITE_TOKEN",
+				"DATABASE_URL",
+				"DATABASE_URL_UNPOOLED"
+			]
 		},
 		"db:studio": {
 			"cache": false,
 			"persistent": true,
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		},
 		"check-types": {
 			"dependsOn": ["$TURBO_EXTENDS$", "build"],
-			"passThroughEnv": ["DATABASE_URL"]
+			"passThroughEnv": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"]
 		}
 	}
 }

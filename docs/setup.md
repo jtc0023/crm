@@ -7,22 +7,21 @@ reads once.
 ## First run
 
 ```sh
-cp .env.example .env        # fill DATABASE_URL, BETTER_AUTH_SECRET, ALLOWED_SIGN_IN
-docker compose up -d        # Postgres, matching .env.example
-bun run db:migrate && bun run db:seed
+cp .env.example .env        # fill Neon DATABASE_URL, BETTER_AUTH_SECRET, ALLOWED_SIGN_IN
+bun run db:deploy && bun run db:seed
 bun run dev                 # app :3000, api :3001, agent :2000
 ```
 
 Prisma from the repo root: `db:generate`, `db:migrate`, `db:push`, `db:reset`,
 `db:seed`, `db:studio`, `db:deploy`.
 
-`dev` depends on `^dev:prepare`, so every start applies pending migrations and
-regenerates the Prisma client before a single server boots. That is why the first
-run needs `db:migrate` only for the seed that follows it. When the database and
-`schema.prisma` have diverged past what `migrate deploy` can reconcile,
-`dev:prepare` stops the whole run rather than starting servers against a schema
-they do not match — reconcile with `db:migrate`, or `db:reset` when the divergence
-is an edited migration that has already been applied.
+`dev` depends on `^dev:prepare`, so every start applies pending migrations to Neon
+and regenerates the Prisma client before a single server boots. That is why the
+first run needs `db:deploy` only for the seed that follows it. When the database and
+`schema.prisma` have diverged past what `migrate deploy` can reconcile, `dev:prepare`
+stops the whole run rather than starting servers against a schema they do not match.
+Reconcile with `db:migrate`, or `db:reset` when the divergence is an edited migration
+that has already been applied.
 
 ## Google Cloud
 
@@ -87,16 +86,16 @@ prints an empty list and was not idle. `eve start` and Vercel do run the schedul
 ## `vercel env pull` writes `.env.local`, which wins
 
 `.env.local` is the override the loader reads *last*, and `vercel env pull` writes
-**production** credentials there by default. Pull once and every process silently
-points at production — not as an error, but as `bun run dev` working perfectly against
-the live database. On 2026-08-01 eleven migrations landed on Neon from a laptop.
+production credentials there by default. This repository uses Neon for local
+development, preview and production, so a pulled Neon URL is expected. Pulling an
+unrelated deployment still silently points every process at that database.
 
-1. **Pull somewhere inert**: `vercel env pull .env.vercel`.
-2. **`packages/db/scripts/require-local-db.ts` guards `db:migrate`, `db:push`,
-   `db:reset`, `db:seed`** and takes `ALLOW_REMOTE_DB=1`. `db:deploy` is unguarded on
-   purpose. It reads the root files directly rather than `process.env`, because Bun
-   auto-loads the working directory's `.env` while Prisma's CLI only sees
-   `@crm/env/load`.
+Pull into `.env` only when that Neon database is the intended workspace. Pull
+somewhere inert for inspection:
+
+```sh
+vercel env pull .env.vercel
+```
 
 ## Migrations run on the production deploy, and nowhere else
 
@@ -105,13 +104,13 @@ build, gated on `VERCEL_ENV === "production"`. The schema therefore moves when t
 release pull request merges and `release` deploys — with the code that needs it,
 and once rather than once per branch.
 
-Preview deploys share the production database: `DATABASE_URL` is a single value
-across production, preview and development. Until that changes, **a preview of a
-branch that adds a migration runs against a database without those tables** — it
-builds, and the pages that touch them fail. Test schema changes locally, where
-`bun run dev` migrates for you. Before the gate existed the reverse was true and
-worse: every preview applied its own migrations to the production database, so on
-2026-08-07 the live schema ran six migrations ahead of the live code all day.
+Preview deploys share the Neon database: `DATABASE_URL` is a single value across
+production, preview and development. Until that changes, **a preview of a branch that
+adds a migration runs against a database without those tables** — it builds, and the
+pages that touch them fail. Test schema changes on the Neon database used by this
+workspace. Before the production gate existed the reverse was true and worse: every
+preview applied its own migrations to the production database, so on 2026-08-07 the
+live schema ran six migrations ahead of the live code all day.
 
 ### `migrate deploy` is not proof the schema is right
 

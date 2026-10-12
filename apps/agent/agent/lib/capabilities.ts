@@ -44,9 +44,16 @@ export function capabilitiesFrom(
 		enabled: Boolean(process.env[id]?.trim()),
 	});
 
+	const webResearchEnabled = Boolean(
+		process.env.AI_GATEWAY_API_KEY?.trim() ||
+			process.env.PERPLEXITY_API_KEY?.trim(),
+	);
+
 	return [
 		{
-			...fromEnv("PERPLEXITY_API_KEY"),
+			id: "PERPLEXITY_API_KEY",
+			from: "AI_GATEWAY_API_KEY or PERPLEXITY_API_KEY",
+			enabled: webResearchEnabled,
 			label: "Web research",
 			gives:
 				"open-web context with citations, and the search that finds a LinkedIn slug in the first place",

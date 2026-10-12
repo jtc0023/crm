@@ -253,51 +253,83 @@ it:
 
 ## Median Tasks
 
-Median can use a project-local workspace binding. If this repository has
-`.median/config.json`, run `mdn` commands from inside this repository so the
-correct Median workspace profile is selected. The local config stores only a
-profile name; API keys stay in your user config.
+Median tracks development tasks. The application does not use Median at runtime.
+The official package is `mediansh`. The command is `median`.
+Use the [official CLI guide](https://docs.median.sh/api/cli) for installation and account setup.
 
-To bind this repository to a workspace:
+Install the CLI outside this repository:
 
-```
-mdn setup --local
-```
-
-Before starting work, check your assigned tasks:
-
-```
-mdn tasks --agent <your-agent-name>
+```sh
+npm install -g mediansh
+median --version
 ```
 
-When picking up a task:
+Sign in once on this machine. The user approves access in the browser:
 
-```
-mdn status <TASK-CODE> in_progress --agent <your-agent-name>
-```
-
-When completing a task:
-
-```
-mdn status <TASK-CODE> ready --agent <your-agent-name>
+```sh
+median login
+median whoami
 ```
 
-To create a new task:
+Check the organization before task work. Select the intended organization:
 
+```sh
+median orgs list
+median orgs use <organization-id-or-slug>
+median whoami
 ```
-mdn create --title "Description" --status todo --priority medium --agent <your-agent-name>
+
+The CLI stores its session in `~/.median/credentials.json`.
+Keep credentials outside the repository. Never print or commit that file.
+The current CLI does not use `.median/config.json` or `mdn setup --local`.
+
+Before task work, check tasks assigned to the account email:
+
+```sh
+median tasks list --assignee <account-email> --json
 ```
+
+Task assignment uses an account email. The CLI has no `--agent` flag.
+Inspect the task before work:
+
+```sh
+median tasks get <task-id>
+median tasks status <task-id> in_progress
+```
+
+After implementation and validation, mark the task for review:
+
+```sh
+median tasks status <task-id> in_review
+```
+
+Create a task with its account assignee:
+
+```sh
+median tasks create --title "Description" --status planned --priority medium --assignee <account-email>
+```
+
+Use `median tasks <command> --help` to check command arguments.
+Task statuses are `requests`, `planned`, `in_progress`, `in_review`, and `done`.
+Moving a task to `done` sends customer notifications. Obtain explicit authorization before that action.
+
+Median setup does not block unrelated repository work.
+Report missing sign-in or organization access. Continue authorized local work.
+Do not invent task IDs or change tasks in another organization.
 
 ## Commit Messages & Pull Requests
 
-Always include the Median task ID in commit messages and PR titles so tasks get marked automatically.
+Use Conventional Commit syntax from CONTRIBUTING.md.
+Include the linked Median task code in commit messages and PR titles:
 
-```
-git commit -m "MDN-42 fix: resolve auth token expiry"
+```sh
+git commit -m "fix: resolve auth token expiry (MDN-42)"
 ```
 
-For pull requests, include the task ID in the title:
+Use the same format for the PR title:
 
+```text
+fix: resolve auth token expiry (MDN-42)
 ```
-MDN-42 fix: resolve auth token expiry
-```
+
+Use the task's actual code. Work without a linked task uses no task code.

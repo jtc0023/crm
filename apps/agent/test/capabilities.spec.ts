@@ -9,7 +9,11 @@ import {
 	unavailable,
 } from "../agent/lib/capabilities";
 
-const KEYS = ["PERPLEXITY_API_KEY", "BLOB_READ_WRITE_TOKEN"] as const;
+const KEYS = [
+	"AI_GATEWAY_API_KEY",
+	"PERPLEXITY_API_KEY",
+	"BLOB_READ_WRITE_TOKEN",
+] as const;
 
 const saved: Record<string, string | undefined> = {};
 
@@ -34,20 +38,26 @@ describe("capabilities", () => {
 	});
 
 	it("turns one on without turning on the others", async () => {
-		process.env.PERPLEXITY_API_KEY = "pplx-test";
+		process.env.AI_GATEWAY_API_KEY = "gateway-test";
 
 		expect(await enabled("PERPLEXITY_API_KEY")).toBe(true);
 		expect(await enabled("BLOB_READ_WRITE_TOKEN")).toBe(false);
 	});
 
 	it("treats blank and whitespace as unset", async () => {
-		process.env.PERPLEXITY_API_KEY = "   ";
+		process.env.AI_GATEWAY_API_KEY = "   ";
 		expect(await enabled("PERPLEXITY_API_KEY")).toBe(false);
 	});
 
 	it("is read live, so a late-configured process is not stuck off", async () => {
 		expect(await enabled("PERPLEXITY_API_KEY")).toBe(false);
-		process.env.PERPLEXITY_API_KEY = "key";
+		process.env.AI_GATEWAY_API_KEY = "key";
+		expect(await enabled("PERPLEXITY_API_KEY")).toBe(true);
+	});
+
+	it("also accepts a direct Perplexity key", async () => {
+		process.env.PERPLEXITY_API_KEY = "pplx-test";
+
 		expect(await enabled("PERPLEXITY_API_KEY")).toBe(true);
 	});
 
@@ -135,7 +145,7 @@ describe("the capability briefing", () => {
 	});
 
 	it("counts a stored Context key as configured", () => {
-		process.env.PERPLEXITY_API_KEY = "key";
+		process.env.AI_GATEWAY_API_KEY = "key";
 
 		const markdown = markdownFor(capabilitiesFrom("ctx"));
 

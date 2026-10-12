@@ -1,4 +1,5 @@
-const ENDPOINT = "https://api.perplexity.ai/chat/completions";
+const AI_GATEWAY_ENDPOINT = "https://ai-gateway.vercel.sh/v1/chat/completions";
+const PERPLEXITY_ENDPOINT = "https://api.perplexity.ai/chat/completions";
 const TIMEOUT_MS = 45_000;
 
 export type Answer = {
@@ -8,8 +9,17 @@ export type Answer = {
 
 type Outcome<T> = { ok: true; data: T } | { ok: false; reason: string };
 
+function linksFromMarkdown(text: string): string[] {
+	return [...text.matchAll(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/g)].flatMap(
+		(match) => (match[1] ? [match[1]] : []),
+	);
+}
+
 export function perplexityEnabled(): boolean {
-	return Boolean(process.env.PERPLEXITY_API_KEY);
+	return Boolean(
+		process.env.AI_GATEWAY_API_KEY?.trim() ||
+			process.env.PERPLEXITY_API_KEY?.trim(),
+	);
 }
 
 export type AskOptions = {
@@ -18,26 +28,53 @@ export type AskOptions = {
 	system?: string;
 };
 
+function keyAndEndpoint(): { apiKey: string; endpoint: string; prefix: string } | null {
+	const gatewayKey = process.env.AI_GATEWAY_API_KEY?.trim();
+	if (gatewayKey) {
+		return {
+			apiKey: gatewayKey,
+			endpoint: AI_GATEWAY_ENDPOINT,
+			prefix: "perplexity/",
+		};
+	}
+
+	const perplexityKey = process.env.PERPLEXITY_API_KEY?.trim();
+	if (perplexityKey) {
+		return {
+			apiKey: perplexityKey,
+			endpoint: PERPLEXITY_ENDPOINT,
+			prefix: "",
+		};
+	}
+
+	return null;
+}
+
 export async function ask(
 	question: string,
 	options: AskOptions = {},
 ): Promise<Outcome<Answer>> {
-	const apiKey = process.env.PERPLEXITY_API_KEY;
-	if (!apiKey) return { ok: false, reason: "No PERPLEXITY_API_KEY." };
+	const gateway = keyAndEndpoint();
+	if (!gateway) {
+		return {
+			ok: false,
+			reason: "No AI_GATEWAY_API_KEY or PERPLEXITY_API_KEY.",
+		};
+	}
 
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
 	try {
-		const response = await fetch(ENDPOINT, {
+		const response = await fetch(gateway.endpoint, {
 			method: "POST",
 			headers: {
-				authorization: `Bearer ${apiKey}`,
+				authorization: `Bearer ${gateway.apiKey}`,
 				"content-type": "application/json",
 			},
 			signal: controller.signal,
 			body: JSON.stringify({
-				model: options.model ?? "sonar",
+				model: `${gateway.prefix}${options.model ?? "sonar"}`,
 				messages: [
 					...(options.system
 						? [{ role: "system", content: options.system }]
@@ -65,7 +102,13 @@ export async function ask(
 			body.citations ??
 			(body.search_results ?? []).flatMap((r) => (r.url ? [r.url] : []));
 
-		return { ok: true, data: { text, citations } };
+		return {
+			ok: true,
+			data: {
+				text,
+				citations: citations.length > 0 ? citations : linksFromMarkdown(text),
+			},
+		};
 	} catch (error) {
 		const aborted = error instanceof Error && error.name === "AbortError";
 		return {

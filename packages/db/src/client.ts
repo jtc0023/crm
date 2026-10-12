@@ -66,6 +66,11 @@ export interface PrismaLogRecord {
 
 export type PrismaLogSink = (record: PrismaLogRecord) => void;
 
+type PgPoolConfig = {
+	connectionString: string;
+	ssl?: { rejectUnauthorized: boolean };
+};
+
 const consoleSink: PrismaLogSink = ({ level, message, target, durationMs }) => {
 	const suffix = durationMs === undefined ? "" : ` (+${durationMs}ms)`;
 	const line = `[prisma:${level}] ${message}${suffix} [${target}]`;
@@ -100,7 +105,7 @@ const logDefinitions: Prisma.LogDefinition[] = [
 
 const createPrismaClient = () => {
 	const client = new PrismaClient({
-		adapter: new PrismaPg({ connectionString }),
+		adapter: new PrismaPg(poolConfig(connectionString)),
 		log: logDefinitions,
 	});
 
@@ -119,6 +124,43 @@ const createPrismaClient = () => {
 
 	return client;
 };
+
+function poolConfig(value: string): PgPoolConfig {
+	const connectionString = normalizeConnectionString(value);
+
+	return {
+		connectionString,
+		ssl: needsTls(connectionString) ? { rejectUnauthorized: false } : undefined,
+	};
+}
+
+function normalizeConnectionString(value: string): string {
+	try {
+		const url = new URL(value);
+
+		if (isNeonHost(url.hostname)) {
+			url.searchParams.set("sslmode", "require");
+			url.searchParams.set("uselibpqcompat", "true");
+		}
+
+		return url.toString();
+	} catch {
+		return value;
+	}
+}
+
+function needsTls(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return isNeonHost(url.hostname) || url.searchParams.get("sslmode") !== null;
+	} catch {
+		return false;
+	}
+}
+
+function isNeonHost(hostname: string): boolean {
+	return hostname.endsWith(".neon.tech");
+}
 
 declare global {
 	var prisma: ReturnType<typeof createPrismaClient> | undefined;

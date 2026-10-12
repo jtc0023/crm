@@ -30,7 +30,7 @@ export class EnvironmentVariables {
 	@IsString()
 	@MinLength(1, {
 		message:
-			"DATABASE_URL is required. `docker compose up -d` starts one, or set it to any Postgres connection string.",
+			"DATABASE_URL is required. Set it to the Neon Postgres connection string for this workspace.",
 	})
 	DATABASE_URL!: string;
 

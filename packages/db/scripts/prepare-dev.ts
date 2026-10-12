@@ -2,7 +2,6 @@ import { join } from "node:path";
 
 const directory = join(import.meta.dir, "..");
 
-await run([process.execPath, "scripts/require-local-db.ts", "dev"]);
 const [migration, generation] = await Promise.all([
 	execute([process.execPath, "run", "prisma", "migrate", "deploy"]),
 	execute([process.execPath, "run", "prisma", "generate"]),
@@ -33,11 +32,6 @@ if (drift === 2) {
 if (drift !== 0) process.exit(drift);
 
 console.log("Database migrations and generated Prisma client are ready.");
-
-async function run(command: string[]): Promise<void> {
-	const exitCode = await execute(command);
-	if (exitCode !== 0) process.exit(exitCode);
-}
 
 async function execute(command: string[]): Promise<number> {
 	const child = Bun.spawn(command, {

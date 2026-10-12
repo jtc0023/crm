@@ -24,9 +24,8 @@ issue.
 Everything you need is in the [README](./README.md#quick-start). Short version:
 
 ```sh
-cp .env.example .env      # fill in ALLOWED_SIGN_IN and the two Google values
+cp .env.example .env      # fill in Neon, ALLOWED_SIGN_IN and the two Google values
 bun install
-docker compose up -d
 bun run db:deploy && bun run db:seed
 bun run dev
 ```
@@ -57,10 +56,9 @@ hooks live in `.githooks/` and `prepare` points `core.hooksPath` at them, so the
 install and no hook manager in the dependency tree. Turbo caches, so a second push that changed
 nothing relevant is nearly free.
 
-It needs the Postgres from `docker compose up -d`, because the API and telemetry tests are real
-integration tests. When you need to push past it — a WIP branch, a docker-less machine, a red test
-you are deliberately pushing to ask about — `git push --no-verify` skips it, and `CRM_SKIP_HOOKS=1`
-skips it for a whole shell.
+It needs `TEST_DATABASE_URL`, because the API and telemetry tests are real integration tests.
+When you need to push past it — a WIP branch, a red test you are deliberately pushing to ask
+about — `git push --no-verify` skips it, and `CRM_SKIP_HOOKS=1` skips it for a whole shell.
 
 **The suite runs against `TEST_DATABASE_URL`, never `DATABASE_URL`, and refuses to start without
 it.** `bun run db:test` creates the database and migrates it; the name has to end in `_test`.
